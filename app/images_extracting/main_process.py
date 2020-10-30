@@ -1,20 +1,10 @@
 import cv2
 import os
 import pyrebase
+import requests
+from .firebase_storage import get_storage
 
-config = {
-    'apiKey': 'AIzaSyBQLYTo-G-pdn-JZsyAiNKj-Z9n-JB-V0A',
-    'authDomain': 'fir-storageuploading-6eaa6.firebaseapp.com',
-    'databaseURL': 'https://fir-storageuploading-6eaa6.firebaseio.com',
-    'projectId': 'fir-storageuploading-6eaa6',
-    'storageBucket': 'fir-storageuploading-6eaa6.appspot.com',
-    'messagingSenderId': '251436968164',
-    'appId': '1:251436968164:web:cefc6c1cda08b19f26e4f1',
-    'measurementId': 'G-THNW6XRKH3'
-}
-
-firebase = pyrebase.initialize_app(config)
-storage = firebase.storage()
+storage = get_storage()
 
 
 def process_video(video_name, bytes_str):
@@ -36,11 +26,17 @@ def process_video(video_name, bytes_str):
 
         if isSuccess:
             if current_frame == frames_total - 1:
-                imgPath = './app/images_extracting/data/frame' + \
-                    str(current_frame) + '.png'
+                record_name = f'{get_video_name_without_extensions(video_name)}.png'
+
+                imgPath = f'./app/images_extracting/data/{record_name}'
+
                 cv2.imwrite(imgPath, frame)
+
                 storage.child(
-                    f'images/{get_video_name_without_extensions(video_name)}.png').put(imgPath)
+                    f'images/{record_name}').put(imgPath)
+
+                requests.post(
+                    'http://localhost:5000/get-image-from-storage', json={'record_name': record_name})
             current_frame += 1
         else:
             break

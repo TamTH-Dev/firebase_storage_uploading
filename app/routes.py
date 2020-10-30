@@ -6,7 +6,7 @@ from redis import Redis
 from rq import Queue, Retry
 
 
-q = Queue(connection=Redis('0.0.0.0', 6380))
+q = Queue(connection=Redis(host='0.0.0.0', port=6380))
 
 
 @app.route('/upload-video', methods=['POST'])
