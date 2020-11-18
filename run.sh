@@ -12,6 +12,15 @@ fi
 
 redis-server --port 6380 &
 sleep 1s
+
 python3 worker.py &
 sleep 1s
-flask run --port=5001 --host=0.0.0.0 &
+
+if [ -z "$1" ]
+then
+    HOST='0.0.0.0'
+else
+    HOST=$1
+fi
+
+flask run --port=5001 --host=$HOST &
