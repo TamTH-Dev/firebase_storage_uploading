@@ -2,6 +2,7 @@ import cv2
 import os
 import pyrebase
 import requests
+from app import app
 from .firebase_storage import get_storage
 
 storage = get_storage()
@@ -14,32 +15,35 @@ def process_video(video_name, bytes_str):
     frames_total = int(image_frames.get(cv2.CAP_PROP_FRAME_COUNT))
 
     try:
-        if not os.path.exists('./app/images_extracting/data'):
-            os.makedirs('./app/images_extracting/data')
+        if not os.path.exists('./app/images_extracting/frames'):
+            os.makedirs('./app/images_extracting/frames')
     except OSError:
-        print('Error: Creating directory of data')
+        app.logger.error('Error when creating frames directory')
 
     current_frame = 0
 
-    while(True):
-        isSuccess, frame = image_frames.read()
+    try:
+        while(True):
+            isSuccess, frame = image_frames.read()
 
-        if isSuccess:
-            if current_frame == frames_total - 1:
-                record_name = f'{get_video_name_without_extensions(video_name)}.png'
+            if isSuccess:
+                if current_frame == frames_total - 1:
+                    record_name = f'{get_video_name_without_extensions(video_name)}.png'
 
-                img_path = f'./app/images_extracting/data/{record_name}'
+                    img_path = f'./app/images_extracting/frames/{record_name}'
 
-                cv2.imwrite(img_path, frame)
+                    cv2.imwrite(img_path, frame)
 
-                storage.child(
-                    f'images/{record_name}').put(img_path)
+                    storage.child(
+                        f'images/{record_name}').put(img_path)
 
-                requests.post(
-                    'http://localhost:5000/get-image-from-storage', json={'record_name': record_name})
-            current_frame += 1
-        else:
-            break
+                    requests.post(
+                        'http://localhost:5000/get-image-from-storage', json={'record_name': record_name})
+                current_frame += 1
+            else:
+                break
+    except Exception as error:
+        app.logger.error(error)
 
     image_frames.release()
     cv2.destroyAllWindows()
@@ -50,7 +54,7 @@ def get_video_from_bytes_str(video_name, bytes_str):
         if not os.path.exists('./app/images_extracting/videos'):
             os.makedirs('./app/images_extracting/videos')
     except OSError:
-        print('Error: Creating directory of data')
+        app.logger.error('Error when creating videos directory')
 
     try:
         output_file = f'./app/images_extracting/videos/{video_name}'
@@ -61,7 +65,7 @@ def get_video_from_bytes_str(video_name, bytes_str):
         out_file.write(bytes_str)
         out_file.close()
     except Exception as error:
-        print(error)
+        app.logger.error(error)
 
     return output_file
 
