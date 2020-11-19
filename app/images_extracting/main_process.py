@@ -28,12 +28,12 @@ def process_video(video_name, bytes_str):
             if current_frame == frames_total - 1:
                 record_name = f'{get_video_name_without_extensions(video_name)}.png'
 
-                imgPath = f'./app/images_extracting/data/{record_name}'
+                img_path = f'./app/images_extracting/data/{record_name}'
 
-                cv2.imwrite(imgPath, frame)
+                cv2.imwrite(img_path, frame)
 
                 storage.child(
-                    f'images/{record_name}').put(imgPath)
+                    f'images/{record_name}').put(img_path)
 
                 requests.post(
                     'http://localhost:5000/get-image-from-storage', json={'record_name': record_name})
